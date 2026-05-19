@@ -64,6 +64,7 @@ type Options struct {
 	Driftnet             goflags.StringSlice
 	GreyNoise            goflags.StringSlice
 	Daydaymap            goflags.StringSlice
+	NerdyData            goflags.StringSlice
 	DisableUpdateCheck   bool
 }
 
@@ -75,7 +76,7 @@ func ParseOptions() *Options {
 
 	flagSet.CreateGroup("input", "Input",
 		flagSet.StringSliceVarP(&options.Query, "query", "q", nil, "search query, supports: stdin,file,config input (example: -q 'example query', -q 'query.txt')", goflags.FileStringSliceOptions),
-		flagSet.StringSliceVarP(&options.Engine, "engine", "e", nil, "search engine to query (shodan,shodan-idb,fofa,censys,quake,hunter,zoomeye,netlas,publicwww,criminalip,hunterhow,google,odin,binaryedge,onyphe,driftnet,greynoise,daydaymap) (default shodan)", goflags.FileNormalizedStringSliceOptions),
+		flagSet.StringSliceVarP(&options.Engine, "engine", "e", nil, "search engine to query (shodan,shodan-idb,fofa,censys,quake,hunter,zoomeye,netlas,publicwww,criminalip,hunterhow,google,odin,binaryedge,onyphe,driftnet,greynoise,daydaymap,nerdydata) (default shodan)", goflags.FileNormalizedStringSliceOptions),
 		flagSet.StringSliceVarP(&options.AwesomeSearchQueries, "awesome-search-queries", "asq", nil, "use awesome search queries to discover exposed assets on the internet (example: -asq 'jira')", goflags.FileStringSliceOptions),
 	)
 
@@ -98,6 +99,7 @@ func ParseOptions() *Options {
 		flagSet.StringSliceVarP(&options.Driftnet, "driftnet", "df", nil, "search query for driftnet (example: -driftnet 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.GreyNoise, "greynoise", "gn", nil, "search query for greynoise (example: -greynoise 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.Daydaymap, "daydaymap", "ddm", nil, "search query for daydaymap (example: -daydaymap 'query.txt')", goflags.FileStringSliceOptions),
+		flagSet.StringSliceVarP(&options.NerdyData, "nerdydata", "nd", nil, "search query for NerdyData (example: -nerdydata 'query.txt')", goflags.FileStringSliceOptions),
 	)
 
 	flagSet.CreateGroup("config", "Config",
@@ -175,7 +177,8 @@ func ParseOptions() *Options {
 		len(options.Onyphe),
 		len(options.Driftnet),
 		len(options.GreyNoise),
-		len(options.Daydaymap)) {
+		len(options.Daydaymap),
+		len(options.NerdyData)) {
 		options.Engine = append(options.Engine, "shodan")
 	}
 
@@ -249,7 +252,8 @@ func (options *Options) validateOptions() error {
 		len(options.Onyphe),
 		len(options.Driftnet),
 		len(options.GreyNoise),
-		len(options.Daydaymap)) {
+		len(options.Daydaymap),
+		len(options.NerdyData)) {
 		return errors.New("no query provided")
 	}
 
@@ -278,7 +282,8 @@ func (options *Options) validateOptions() error {
 		len(options.Onyphe),
 		len(options.Driftnet),
 		len(options.GreyNoise),
-		len(options.Daydaymap)) {
+		len(options.Daydaymap),
+		len(options.NerdyData)) {
 		return errors.New("no engine specified")
 	}
 
@@ -324,6 +329,7 @@ func appendAllQueries(options *Options) {
 	appendQuery(options, "driftnet", options.Driftnet...)
 	appendQuery(options, "greynoise", options.GreyNoise...)
 	appendQuery(options, "daydaymap", options.Daydaymap...)
+	appendQuery(options, "nerdydata", options.NerdyData...)
 }
 
 func (options *Options) useAwesomeSearchQueries(awesomeSearchQueries []string) error {
