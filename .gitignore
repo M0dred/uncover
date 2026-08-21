@@ -18,3 +18,6 @@ integration-tests/integration-test
 # Dependency directories (remove the comment below to include it)
 # vendor/
 dist/
+
+# Local discovery and scan output
+0_urls_*.txt
