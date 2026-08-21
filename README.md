@@ -208,6 +208,49 @@ export NERDYDATA_API_KEY=xxx
 
 Required API keys can be obtained by signing up on following platform [Shodan](https://account.shodan.io/register), [Censys](https://censys.io/register), [Fofa](https://fofa.info/toLogin), [Quake](https://quake.360.net/quake/#/index), [Hunter](https://user.skyeye.qianxin.com/user/register?next=https%3A//hunter.qianxin.com/api/uLogin&fromLogin=1), [ZoomEye](https://www.zoomeye.ai), [Netlas](https://app.netlas.io/registration/), [CriminalIP](https://www.criminalip.io/register), [Publicwww](https://publicwww.com/profile/signup.html), Google [[1]](https://developers.google.com/custom-search/v1/introduction#identify_your_application_to_google_with_api_key),[[2]](https://programmablesearchengine.google.com/controlpanel/create), [Onyphe](https://search.onyphe.io/signup), [Driftnet](https://driftnet.io/auth?state=signup), [DayDayMap](https://www.daydaymap.com) and [NerdyData](https://www.nerdydata.com/api?utm_source=projectdiscovery/uncover).
 
+## Scopequery: API discovery for scanner pipelines
+
+`scopequery` is a smaller command for querying FOFA, 360 Quake, and Driftnet,
+then emitting normalized, deduplicated targets for authorized bug bounty and
+VDP workflows. It does not launch a scanner. Scope filtering is required unless
+`-allow-all` is explicitly supplied.
+
+API keys are read only from environment variables:
+
+```console
+export FOFA_API_KEY='...'
+export QUAKE_TOKEN='...'
+export DRIFTNET_API_KEY='...'
+```
+
+Query one or more providers and pass candidate endpoints through `httpx` before
+Nuclei so that the live HTTP scheme is detected instead of guessed:
+
+```console
+go run ./cmd/scopequery \
+  -scope example.com \
+  -fofa-query 'domain="example.com"' \
+  -quake-query 'domain: "example.com"' \
+  -driftnet-query 'host;:example.com' \
+  -limit 100 \
+  | httpx -silent \
+  | nuclei -silent
+```
+
+An allowlist file may contain domains, IPs, and CIDRs, one per line. Blank lines
+and comments beginning with `#` are ignored:
+
+```console
+go run ./cmd/scopequery \
+  -scope-file program-scope.txt \
+  -fofa-query 'domain="example.com"' \
+  -format hostport
+```
+
+Output formats are `hostport` (default, recommended as `httpx` input), `host`,
+`url` (scheme inferred from the port), and `jsonl`. Provider query flags are
+repeatable. The limit applies independently to each query.
+
 ## Running Uncover
 
 ### Default run:
