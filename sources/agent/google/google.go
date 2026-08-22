@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -66,7 +67,7 @@ func (agent *Agent) Query(ctx context.Context, session *sources.Session, query *
 			}
 
 			numberOfResults += len(queryResult)
-			pageQuery += 1
+			pageQuery += size
 		}
 	}()
 
@@ -80,6 +81,11 @@ func (agent *Agent) query(ctx context.Context, session *sources.Session, googleR
 		sources.SendResult(ctx, results, sources.Result{Source: agent.Name(), Error: err})
 		return nil
 	}
+	defer func(body io.ReadCloser) {
+		if errClose := body.Close(); errClose != nil {
+			sources.SendResult(ctx, results, sources.Result{Source: agent.Name(), Error: errClose})
+		}
+	}(resp.Body)
 
 	var apiResponse Response
 	if resp.Header.Get("Content-Encoding") == "gzip" {

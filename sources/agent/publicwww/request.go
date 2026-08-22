@@ -1,6 +1,9 @@
 package publicwww
 
-import "net/url"
+import (
+	"net/url"
+	"strconv"
+)
 
 type Request struct {
 	Query string `json:"query"`
@@ -11,5 +14,6 @@ func (r *Request) buildURL(key string) string {
 	return baseURL +
 		baseEndpoint +
 		url.QueryEscape(`"`+r.Query+`"`) +
-		`/?export=urls&key=` + key
+		`/?export=urls&key=` + key +
+		`&start=` + strconv.Itoa(r.Start)
 }

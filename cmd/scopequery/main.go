@@ -118,11 +118,15 @@ func run() error {
 				continue
 			}
 			var output string
+			outputTarget := result.Target(format)
+			if format == "jsonl" {
+				outputTarget = target
+			}
 			if format == "jsonl" {
 				payload := struct {
 					scopequery.Result
 					Target string `json:"target"`
-				}{Result: result, Target: target}
+				}{Result: result, Target: outputTarget}
 				encoded, _ := json.Marshal(payload)
 				output = string(encoded)
 			} else {

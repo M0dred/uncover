@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/uncover/sources"
 )
 
@@ -41,6 +42,7 @@ func (agent *Agent) Query(ctx context.Context, session *sources.Session, query *
 			}
 			publicwwwRequest := &Request{
 				Query: query.Query,
+				Start: numberOfResults,
 			}
 
 			if numberOfResults > query.Limit {
@@ -69,6 +71,11 @@ func (agent *Agent) query(ctx context.Context, URL string, session *sources.Sess
 		sources.SendResult(ctx, results, sources.Result{Source: agent.Name(), Error: err})
 		return nil
 	}
+	defer func(body io.ReadCloser) {
+		if bodyCloseErr := body.Close(); bodyCloseErr != nil {
+			gologger.Info().Msgf("response body close error : %v", bodyCloseErr)
+		}
+	}(resp.Body)
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
