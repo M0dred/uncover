@@ -91,6 +91,9 @@ func (agent *Agent) query(ctx context.Context, s *censyssdkgo.SDK, censysRequest
 	if result := resp.ResponseEnvelopeSearchQueryResponse.Result; result != nil {
 		for _, censysResult := range result.Hits {
 			for _, host := range censysResult.WebpropertyV1.Resource.Endpoints {
+				if host.HTTP == nil && host.Port == nil && host.Hostname == nil && host.IP == nil {
+					continue
+				}
 				out := sources.Result{Source: agent.Name()}
 				if host.IP != nil {
 					out.IP = *host.IP
