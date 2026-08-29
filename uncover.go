@@ -10,6 +10,7 @@ import (
 	"github.com/projectdiscovery/uncover/sources/agent/binaryedge"
 	"github.com/projectdiscovery/uncover/sources/agent/censys"
 	"github.com/projectdiscovery/uncover/sources/agent/criminalip"
+	"github.com/projectdiscovery/uncover/sources/agent/crt"
 	"github.com/projectdiscovery/uncover/sources/agent/daydaymap"
 	"github.com/projectdiscovery/uncover/sources/agent/driftnet"
 	"github.com/projectdiscovery/uncover/sources/agent/fofa"
@@ -17,10 +18,10 @@ import (
 	"github.com/projectdiscovery/uncover/sources/agent/greynoise"
 	"github.com/projectdiscovery/uncover/sources/agent/hunter"
 	"github.com/projectdiscovery/uncover/sources/agent/hunterhow"
+	"github.com/projectdiscovery/uncover/sources/agent/nerdydata"
 	"github.com/projectdiscovery/uncover/sources/agent/netlas"
 	"github.com/projectdiscovery/uncover/sources/agent/odin"
 	"github.com/projectdiscovery/uncover/sources/agent/onyphe"
-	"github.com/projectdiscovery/uncover/sources/agent/nerdydata"
 	"github.com/projectdiscovery/uncover/sources/agent/publicwww"
 	"github.com/projectdiscovery/uncover/sources/agent/quake"
 	"github.com/projectdiscovery/uncover/sources/agent/shodan"
@@ -64,6 +65,8 @@ func New(opts *Options) (*Service, error) {
 			s.Agents = append(s.Agents, &shodan.Agent{})
 		case "censys":
 			s.Agents = append(s.Agents, &censys.Agent{})
+		case "crt":
+			s.Agents = append(s.Agents, &crt.Agent{})
 		case "fofa":
 			s.Agents = append(s.Agents, &fofa.Agent{})
 		case "shodan-idb":
@@ -137,7 +140,7 @@ func (s *Service) Execute(ctx context.Context) (<-chan sources.Result, error) {
 	agentLabel:
 		for _, agent := range s.Agents {
 			keys := s.Provider.GetKeys()
-			if keys.Empty() && agent.Name() != "shodan-idb" {
+			if keys.Empty() && !isAnonymousAgent(agent.Name()) {
 				gologger.Error().Msgf(agent.Name(), "agent given but keys not found")
 				continue agentLabel
 			}
@@ -202,7 +205,7 @@ func (s *Service) ExecuteWithCallback(ctx context.Context, callback func(result 
 // AllAgents returns all supported uncover Agents
 func (s *Service) AllAgents() []string {
 	return []string{
-		"shodan", "censys", "fofa", "shodan-idb", "quake", "hunter", "zoomeye", "netlas", "criminalip", "publicwww", "hunterhow", "google", "odin", "binaryedge", "onyphe", "driftnet", "greynoise", "daydaymap", "nerdydata",
+		"shodan", "censys", "crt", "fofa", "shodan-idb", "quake", "hunter", "zoomeye", "netlas", "criminalip", "publicwww", "hunterhow", "google", "odin", "binaryedge", "onyphe", "driftnet", "greynoise", "daydaymap", "nerdydata",
 	}
 }
 
@@ -220,5 +223,18 @@ func (s *Service) nilCheck() error {
 }
 
 func (s *Service) hasAnyAnonymousProvider() bool {
-	return stringsutil.EqualFoldAny("shodan-idb", s.Options.Agents...)
+	return isAnonymousAgentInList(s.Options.Agents)
+}
+
+func isAnonymousAgent(name string) bool {
+	return stringsutil.EqualFoldAny(name, "shodan-idb", "crt")
+}
+
+func isAnonymousAgentInList(agents []string) bool {
+	for _, agent := range agents {
+		if isAnonymousAgent(agent) {
+			return true
+		}
+	}
+	return false
 }

@@ -15,6 +15,7 @@ require (
 	github.com/projectdiscovery/ratelimit v0.0.71
 	github.com/projectdiscovery/retryablehttp-go v1.0.98
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/net v0.47.0
 )
 
 require (
@@ -39,7 +40,6 @@ require (
 	github.com/projectdiscovery/utils v0.4.8
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
