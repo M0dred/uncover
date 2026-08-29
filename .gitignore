@@ -21,3 +21,7 @@ dist/
 
 # Local discovery and scan output
 0_urls_*.txt
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore

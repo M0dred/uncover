@@ -17,14 +17,8 @@ func testSession(t *testing.T) *sources.Session {
 	t.Helper()
 	session, err := sources.NewSession(&sources.Keys{}, 0, 5, 60, []string{"crt"}, time.Second, "")
 	require.NoError(t, err)
+	t.Cleanup(session.Close)
 	return session
-}
-
-func withTestURL(t *testing.T, value string) {
-	t.Helper()
-	original := URL
-	URL = value
-	t.Cleanup(func() { URL = original })
 }
 
 func TestQueryParsesAndFiltersRecords(t *testing.T) {
@@ -38,13 +32,13 @@ func TestQueryParsesAndFiltersRecords(t *testing.T) {
 {"sub":"API.Example.COM.","first_seen":"2024-01-02T03:04:05Z"},
 {"sub":"*.example.com","first_seen":null},
 {"sub":"outside.example.net","first_seen":"2024-01-02T03:04:05Z"},
-{"sub":"www.example.com","first_seen":null}
+{"sub":"www.example.com","first_seen":null},
+{"sub":"WWW.EXAMPLE.COM.","first_seen":"2025-01-01T00:00:00Z"}
 ]`))
 	}))
 	t.Cleanup(server.Close)
-	withTestURL(t, server.URL)
 
-	ch, err := (&Agent{}).Query(context.Background(), testSession(t), &sources.Query{Query: "Example.COM.", Limit: 10})
+	ch, err := (&Agent{Endpoint: server.URL}).Query(context.Background(), testSession(t), &sources.Query{Query: "Example.COM.", Limit: 10})
 	require.NoError(t, err)
 
 	var results []sources.Result
@@ -67,9 +61,8 @@ func TestQueryHonorsLimit(t *testing.T) {
 		_, _ = w.Write([]byte(`[{"sub":"a.example.com"},{"sub":"b.example.com"}]`))
 	}))
 	t.Cleanup(server.Close)
-	withTestURL(t, server.URL)
 
-	ch, err := (&Agent{}).Query(context.Background(), testSession(t), &sources.Query{Query: "example.com", Limit: 1})
+	ch, err := (&Agent{Endpoint: server.URL}).Query(context.Background(), testSession(t), &sources.Query{Query: "example.com", Limit: 1})
 	require.NoError(t, err)
 	var results []sources.Result
 	for result := range ch {
@@ -89,9 +82,8 @@ func TestQueryReportsHTTPError(t *testing.T) {
 		http.Error(w, "quota exceeded", http.StatusTooManyRequests)
 	}))
 	t.Cleanup(server.Close)
-	withTestURL(t, server.URL)
 
-	ch, err := (&Agent{}).Query(context.Background(), testSession(t), &sources.Query{Query: "example.com"})
+	ch, err := (&Agent{Endpoint: server.URL}).Query(context.Background(), testSession(t), &sources.Query{Query: "example.com"})
 	require.NoError(t, err)
 	result, ok := <-ch
 	require.True(t, ok)
@@ -114,10 +106,9 @@ func TestQueryRespectsCancellation(t *testing.T) {
 		_, _ = w.Write([]byte("]"))
 	}))
 	t.Cleanup(server.Close)
-	withTestURL(t, server.URL)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	ch, err := (&Agent{}).Query(ctx, testSession(t), &sources.Query{Query: "example.com", Limit: 1000})
+	ch, err := (&Agent{Endpoint: server.URL}).Query(ctx, testSession(t), &sources.Query{Query: "example.com", Limit: 1000})
 	require.NoError(t, err)
 	select {
 	case _, ok := <-ch:

@@ -2,11 +2,10 @@ package runner
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
-
-	"errors"
 
 	awesomesearchqueries "github.com/projectdiscovery/awesome-search-queries"
 	"github.com/projectdiscovery/goflags"
@@ -264,6 +263,9 @@ func (options *Options) validateOptions() error {
 	// Both verbose and silent flags were used
 	if options.Verbose && options.Silent {
 		return errors.New("both verbose and silent mode specified")
+	}
+	if err := validateExecutionControls(options); err != nil {
+		return err
 	}
 
 	// Validate threads and options
