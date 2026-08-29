@@ -65,6 +65,7 @@ type Options struct {
 	GreyNoise            goflags.StringSlice
 	Daydaymap            goflags.StringSlice
 	NerdyData            goflags.StringSlice
+	Crt                  goflags.StringSlice
 	DisableUpdateCheck   bool
 }
 
@@ -76,7 +77,7 @@ func ParseOptions() *Options {
 
 	flagSet.CreateGroup("input", "Input",
 		flagSet.StringSliceVarP(&options.Query, "query", "q", nil, "search query, supports: stdin,file,config input (example: -q 'example query', -q 'query.txt')", goflags.FileStringSliceOptions),
-		flagSet.StringSliceVarP(&options.Engine, "engine", "e", nil, "search engine to query (shodan,shodan-idb,fofa,censys,quake,hunter,zoomeye,netlas,publicwww,criminalip,hunterhow,google,odin,binaryedge,onyphe,driftnet,greynoise,daydaymap,nerdydata) (default shodan)", goflags.FileNormalizedStringSliceOptions),
+		flagSet.StringSliceVarP(&options.Engine, "engine", "e", nil, "search engine to query (shodan,shodan-idb,fofa,censys,crt,quake,hunter,zoomeye,netlas,publicwww,criminalip,hunterhow,google,odin,binaryedge,onyphe,driftnet,greynoise,daydaymap,nerdydata) (default shodan)", goflags.FileNormalizedStringSliceOptions),
 		flagSet.StringSliceVarP(&options.AwesomeSearchQueries, "awesome-search-queries", "asq", nil, "use awesome search queries to discover exposed assets on the internet (example: -asq 'jira')", goflags.FileStringSliceOptions),
 	)
 
@@ -85,6 +86,7 @@ func ParseOptions() *Options {
 		flagSet.StringSliceVarP(&options.ShodanIdb, "shodan-idb", "sd", nil, "search query for shodan-idb (example: -shodan-idb 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.Fofa, "fofa", "ff", nil, "search query for fofa (example: -fofa 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.Censys, "censys", "cs", nil, "search query for censys (example: -censys 'query.txt')", goflags.FileStringSliceOptions),
+		flagSet.StringSliceVarP(&options.Crt, "crt", "ct", nil, "search apex domain in crt.name (example: -crt 'example.com')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.Quake, "quake", "qk", nil, "search query for quake (example: -quake 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.Hunter, "hunter", "ht", nil, "search query for hunter (example: -hunter 'query.txt')", goflags.FileStringSliceOptions),
 		flagSet.StringSliceVarP(&options.ZoomEye, "zoomeye", "ze", nil, "search query for zoomeye (example: -zoomeye 'query.txt')", goflags.FileStringSliceOptions),
@@ -162,6 +164,7 @@ func ParseOptions() *Options {
 		len(options.Engine),
 		len(options.Shodan),
 		len(options.Censys),
+		len(options.Crt),
 		len(options.Quake),
 		len(options.Fofa),
 		len(options.ShodanIdb),
@@ -237,6 +240,7 @@ func (options *Options) validateOptions() error {
 		len(options.Query),
 		len(options.Shodan),
 		len(options.Censys),
+		len(options.Crt),
 		len(options.Quake),
 		len(options.Fofa),
 		len(options.ShodanIdb),
@@ -267,6 +271,7 @@ func (options *Options) validateOptions() error {
 		len(options.Engine),
 		len(options.Shodan),
 		len(options.Censys),
+		len(options.Crt),
 		len(options.Quake),
 		len(options.Fofa),
 		len(options.ShodanIdb),
@@ -315,6 +320,7 @@ func appendAllQueries(options *Options) {
 	appendQuery(options, "shodan-idb", options.ShodanIdb...)
 	appendQuery(options, "fofa", options.Fofa...)
 	appendQuery(options, "censys", options.Censys...)
+	appendQuery(options, "crt", options.Crt...)
 	appendQuery(options, "quake", options.Quake...)
 	appendQuery(options, "hunter", options.Hunter...)
 	appendQuery(options, "zoomeye", options.ZoomEye...)

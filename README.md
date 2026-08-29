@@ -52,6 +52,7 @@
   - **[Driftnet](https://driftnet.io)**
   - **[DayDayMap](https://www.daydaymap.com)**
   - **[NerdyData](https://www.nerdydata.com/?utm_source=projectdiscovery/uncover)**
+  - **[crt.name](https://crt.name)** (Certificate Transparency subdomain index; no key required)
 - Multiple API key input support
 - Automatic API key randomization
 - **stdin** / **stdout** support for input
@@ -79,7 +80,7 @@ Usage:
 Flags:
 INPUT:
    -q, -query string[]   search query, supports: stdin,file,config input (example: -q 'example query', -q 'query.txt')
-   -e, -engine string[]  search engine to query (shodan,shodan-idb,fofa,censys,quake,hunter,zoomeye,netlas,criminalip,publicwww,hunterhow,google,driftnet,daydaymap) (default shodan)
+   -e, -engine string[]  search engine to query (shodan,shodan-idb,fofa,censys,crt,quake,hunter,zoomeye,netlas,criminalip,publicwww,hunterhow,google,driftnet,daydaymap) (default shodan)
    -asq, -awesome-search-queries string[]  use awesome search queries to discover exposed assets on the internet (example: -asq 'jira')
 
 SEARCH-ENGINE:
@@ -87,6 +88,7 @@ SEARCH-ENGINE:
    -sd, -shodan-idb string[]  search query for shodan-idb (example: -shodan-idb 'query.txt')
    -ff, -fofa string[]        search query for fofa (example: -fofa 'query.txt')
    -cs, -censys string[]      search query for censys (example: -censys 'query.txt')
+   -ct, -crt string[]         search apex domain in crt.name (example: -crt 'example.com')
    -qk, -quake string[]       search query for quake (example: -quake 'query.txt')
    -ht, -hunter string[]      search query for hunter (example: -hunter 'query.txt')
    -ze, -zoomeye string[]     search query for zoomeye (example: -zoomeye 'query.txt')
@@ -131,7 +133,9 @@ Example of using uncover as library is provided in [examples](examples/main.go) 
 The default provider configuration file should be located at `$CONFIG/uncover/provider-config.yaml` and has the following contents as an example.
 
 
-> **Note**: API keys are required and must be configured before running uncover.
+> **Note**: Most providers require API keys. `crt` uses the public crt.name
+> index without a key; an optional `CRT_NAME_TOKEN` can be configured if you
+> have access to higher limits.
 
 ```yaml
 shodan:
@@ -179,9 +183,18 @@ daydaymap:
 nerdydata:
   - NERDYDATA_API_KEY_1
   - NERDYDATA_API_KEY_2
+crt:
+  # Optional Bearer token for higher crt.name limits (free tier needs no key)
+  - CRT_NAME_TOKEN_1
 ```
 
 When multiple keys/credentials are specified for same provider in the config file, random key will be used for each execution.
+
+The `crt` engine queries the public [crt.name](https://crt.name) Certificate
+Transparency index. It accepts an eTLD+1 apex (for example,
+`unimelb.edu.au`), returns hostnames, and does not perform live DNS or HTTP
+probes. The free tier is limited to 100 requests per client IP per UTC day;
+`CRT_NAME_TOKEN` is optional.
 
 alternatively you can also set the API key as environment variable in your bash profile.
 
@@ -204,6 +217,7 @@ export ONYPHE_API_KEY=xxx
 export DRIFTNET_API_KEY=xxx
 export DAYDAYMAP_API_KEY=xxx
 export NERDYDATA_API_KEY=xxx
+export CRT_NAME_TOKEN=xxx
 ```
 
 Required API keys can be obtained by signing up on following platform [Shodan](https://account.shodan.io/register), [Censys](https://censys.io/register), [Fofa](https://fofa.info/toLogin), [Quake](https://quake.360.net/quake/#/index), [Hunter](https://user.skyeye.qianxin.com/user/register?next=https%3A//hunter.qianxin.com/api/uLogin&fromLogin=1), [ZoomEye](https://www.zoomeye.ai), [Netlas](https://app.netlas.io/registration/), [CriminalIP](https://www.criminalip.io/register), [Publicwww](https://publicwww.com/profile/signup.html), Google [[1]](https://developers.google.com/custom-search/v1/introduction#identify_your_application_to_google_with_api_key),[[2]](https://programmablesearchengine.google.com/controlpanel/create), [Onyphe](https://search.onyphe.io/signup), [Driftnet](https://driftnet.io/auth?state=signup), [DayDayMap](https://www.daydaymap.com) and [NerdyData](https://www.nerdydata.com/api?utm_source=projectdiscovery/uncover).

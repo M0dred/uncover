@@ -39,6 +39,7 @@ type Provider struct {
 	GreyNoise  []string `yaml:"greynoise"`
 	Daydaymap  []string `yaml:"daydaymap"`
 	NerdyData  []string `yaml:"nerdydata"`
+	Crt        []string `yaml:"crt"`
 }
 
 // NewProvider loads provider keys from default location and env variables
@@ -131,6 +132,9 @@ func (provider *Provider) GetKeys() Keys {
 	if len(provider.NerdyData) > 0 {
 		keys.NerdyDataToken = provider.NerdyData[rand.Intn(len(provider.NerdyData))]
 	}
+	if len(provider.Crt) > 0 {
+		keys.CrtToken = provider.Crt[rand.Intn(len(provider.Crt))]
+	}
 
 	return keys
 }
@@ -183,6 +187,7 @@ func (provider *Provider) LoadProviderKeysFromEnv() {
 	provider.Onyphe = appendIfExists(provider.Onyphe, "ONYPHE_API_KEY")
 	provider.GreyNoise = appendIfExists(provider.GreyNoise, "GREYNOISE_API_KEY")
 	provider.NerdyData = appendIfExists(provider.NerdyData, "NERDYDATA_API_KEY")
+	provider.Crt = appendIfExists(provider.Crt, "CRT_NAME_TOKEN")
 }
 
 // HasKeys returns true if at least one agent/source has keys
@@ -206,6 +211,7 @@ func (provider *Provider) HasKeys() bool {
 		len(provider.GreyNoise) > 0,
 		len(provider.Daydaymap) > 0,
 		len(provider.NerdyData) > 0,
+		len(provider.Crt) > 0,
 	)
 }
 

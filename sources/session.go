@@ -34,6 +34,9 @@ var DefaultRateLimits = map[string]*ratelimit.Options{
 	"driftnet":   {Key: "driftnet", MaxCount: 5, Duration: time.Second},
 	"greynoise":  {Key: "greynoise", MaxCount: 1, Duration: time.Second},
 	"nerdydata":  {Key: "nerdydata", MaxCount: 1, Duration: time.Second},
+	// crt.name documents a 100-request/IP/day free tier. One request every
+	// 15 minutes stays below that limit without attempting to bypass it.
+	"crt": {Key: "crt", MaxCount: 1, Duration: 15 * time.Minute},
 }
 
 // Session handles session agent sessions
