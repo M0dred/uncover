@@ -42,8 +42,8 @@ type Options struct {
 	Timeout  int
 	// Note these ratelimits are used as fallback in case agent
 	// ratelimit is not available in DefaultRateLimits
-	RateLimit     uint          // default 30 req
-	RateLimitUnit time.Duration // default unit
+	RateLimit     uint          // optional global request cap
+	RateLimitUnit time.Duration // optional global rate-limit unit
 	Proxy         string        // http proxy to use with uncover
 }
 
@@ -106,15 +106,12 @@ func New(opts *Options) (*Service, error) {
 	s.Provider = sources.NewProvider()
 	s.Keys = s.Provider.GetKeys()
 
-	if opts.RateLimit == 0 {
-		opts.RateLimit = 30
-	}
 	if opts.RateLimitUnit == 0 {
-		opts.RateLimitUnit = time.Minute
+		opts.RateLimitUnit = time.Second
 	}
 
 	var err error
-	s.Session, err = sources.NewSession(&s.Keys, opts.MaxRetry, opts.Timeout, 10, opts.Agents, opts.RateLimitUnit, opts.Proxy)
+	s.Session, err = sources.NewSession(&s.Keys, opts.MaxRetry, opts.Timeout, int(opts.RateLimit), opts.Agents, opts.RateLimitUnit, opts.Proxy)
 	if err != nil {
 		return nil, err
 	}
@@ -160,11 +157,15 @@ func (s *Service) Execute(ctx context.Context) (<-chan sources.Result, error) {
 					case <-ctx.Done():
 						return
 					case res, ok := <-source:
-						res.Timestamp = time.Now().Unix()
 						if !ok {
 							return
 						}
-						relay <- res
+						res.Timestamp = time.Now().Unix()
+						select {
+						case <-ctx.Done():
+							return
+						case relay <- res:
+						}
 					}
 				}
 			}(ch, megaChan, ctx)
@@ -206,6 +207,13 @@ func (s *Service) ExecuteWithCallback(ctx context.Context, callback func(result 
 func (s *Service) AllAgents() []string {
 	return []string{
 		"shodan", "censys", "crt", "fofa", "shodan-idb", "quake", "hunter", "zoomeye", "netlas", "criminalip", "publicwww", "hunterhow", "google", "odin", "binaryedge", "onyphe", "driftnet", "greynoise", "daydaymap", "nerdydata",
+	}
+}
+
+// Close releases resources held by the service.
+func (s *Service) Close() {
+	if s != nil && s.Session != nil {
+		s.Session.Close()
 	}
 }
 

@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/censys/censys-sdk-go v0.19.1
-	github.com/hashicorp/golang-lru v0.5.4
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/projectdiscovery/awesome-search-queries v0.0.0-20241111181020-ad0097bd63a1

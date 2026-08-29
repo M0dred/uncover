@@ -196,6 +196,31 @@ Transparency index. It accepts an eTLD+1 apex (for example,
 probes. The free tier is limited to 100 requests per client IP per UTC day;
 `CRT_NAME_TOKEN` is optional.
 
+For authorized batch asset discovery, keep the collection, validation, and
+scanning stages separate:
+
+```console
+# 1. Collect CT hostnames and preserve provider metadata.
+uncover -e crt -q example.com -l 0 -j -silent -o crt-assets.jsonl
+
+# 2. Produce a unique hostname list for DNS/HTTP validation.
+jq -r 'select(.host != "") | .host' crt-assets.jsonl | sort -u > hosts.txt
+
+# 3. Validate HTTP services before sending URLs to a scanner.
+httpx -l hosts.txt -silent -json -o live-http.jsonl
+jq -r 'select(.url != null) | .url' live-http.jsonl | sort -u > urls.txt
+
+# 4. Scan only targets explicitly authorized by the program policy.
+nuclei -l urls.txt
+```
+
+CT hostnames can be historical or no longer resolve. Apply the program's
+scope rules before DNS/HTTP validation and again before scanning. `-rl` and
+`-rlm` are mutually exclusive global request caps; provider-specific ceilings
+remain active as an additional safeguard. These local limits are per process;
+use one scheduler or a shared quota service when several workers share the same
+provider account or source IP.
+
 alternatively you can also set the API key as environment variable in your bash profile.
 
 ```yaml

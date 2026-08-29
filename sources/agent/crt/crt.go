@@ -16,11 +16,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-var (
-	// URL is the crt.name search endpoint. It is a variable so tests can use a
-	// local HTTP server without changing production behavior.
-	URL = "https://crt.name/v1/search"
-)
+const URL = "https://crt.name/v1/search"
 
 const maxResponseBodyBytes = 64 * 1024 * 1024
 
@@ -30,7 +26,11 @@ type record struct {
 }
 
 // Agent queries crt.name for subdomains indexed under an eTLD+1 apex.
-type Agent struct{}
+type Agent struct {
+	// Endpoint is optional and primarily supports isolated integration tests.
+	// Production callers should leave it empty to use URL.
+	Endpoint string
+}
 
 func (agent *Agent) Name() string { return "crt" }
 
@@ -72,6 +72,7 @@ func (agent *Agent) Query(ctx context.Context, session *sources.Session, query *
 		}
 
 		emitted := 0
+		seen := make(map[string]struct{})
 		for decoder.More() {
 			var raw json.RawMessage
 			if err := decoder.Decode(&raw); err != nil {
@@ -88,6 +89,10 @@ func (agent *Agent) Query(ctx context.Context, session *sources.Session, query *
 			if !ok {
 				continue
 			}
+			if _, duplicate := seen[host]; duplicate {
+				continue
+			}
+			seen[host] = struct{}{}
 
 			result := sources.Result{Source: agent.Name(), Host: host, Raw: append([]byte(nil), raw...)}
 			if item.FirstSeen != nil {
@@ -116,7 +121,11 @@ func (agent *Agent) fetch(ctx context.Context, session *sources.Session, apex st
 		"dates":  {"1"},
 		"format": {"json"},
 	}
-	request, err := sources.NewHTTPRequest(ctx, http.MethodGet, URL+"?"+params.Encode(), nil)
+	endpoint := agent.Endpoint
+	if endpoint == "" {
+		endpoint = URL
+	}
+	request, err := sources.NewHTTPRequest(ctx, http.MethodGet, endpoint+"?"+params.Encode(), nil)
 	if err != nil {
 		return nil, err
 	}
