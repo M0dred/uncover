@@ -9,7 +9,6 @@ integration-tests/integration-test
 *.so
 *.dylib
 
-temp_auto_push.bat
 # Test binary, built with `go test -c`
 *.test
 
@@ -22,5 +21,3 @@ dist/
 
 # Local discovery and scan output
 0_urls_*.txt
-.gitignore
-branch_structure.json
